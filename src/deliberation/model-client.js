@@ -4,7 +4,7 @@ export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-v4-pro'
     const url = apiUrl || `${String(baseUrl || '').replace(/\/$/, '')}/chat/completions`;
     let lastEmpty = null;
 
-    for (let attempt = 0; attempt < 2; attempt += 1) {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
       try {
@@ -17,12 +17,11 @@ export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-v4-pro'
           body: JSON.stringify({
             model,
             messages: [
-              { role: 'system', content: system },
-              { role: 'user', content: user },
+            { role: 'system', content: system },
+              { role: 'user', content: emptyRetryUser(user, attempt) },
             ],
             temperature: 0.2,
             max_tokens: maxTokens,
-            response_format: { type: 'json_object' },
           }),
           signal: controller.signal,
         });
@@ -39,7 +38,12 @@ export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-v4-pro'
       }
     }
 
-    throw new Error(`empty assistant content: ${lastEmpty || 'no choices returned'}`);
+    return JSON.stringify({
+      position: 'deliberate',
+      reasoning: `Provider returned no assistant content after retries (${lastEmpty || 'no choices returned'}). Treat this node as inconclusive and retry later.`,
+      confidence: 0,
+      artifacts: [],
+    });
   };
 }
 
@@ -67,6 +71,11 @@ function summarizeEmptyResponse(json) {
   const reason = choice?.finish_reason || choice?.finish_details?.type;
   const role = choice?.message?.role || choice?.delta?.role;
   return [`finish=${reason || 'unknown'}`, `role=${role || 'unknown'}`].join(' ');
+}
+
+function emptyRetryUser(user, attempt) {
+  if (attempt === 0) return user;
+  return `${user}\n\nPrevious provider response was empty. Return exactly one compact JSON object and no prose.`;
 }
 
 export const createDeepSeekClient = createOpenAICompatibleClient;

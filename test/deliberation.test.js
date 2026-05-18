@@ -173,7 +173,7 @@ describe('model router', () => {
     assert.equal(extractAssistantContent({ choices: [{ message: { content: [{ text: 'array' }] } }] }), 'array');
   });
 
-  it('retries once when provider returns empty assistant content', async () => {
+  it('retries when provider returns empty assistant content', async () => {
     const originalFetch = globalThis.fetch;
     let calls = 0;
 
@@ -188,6 +188,27 @@ describe('model router', () => {
       const result = await callModel({ node: { id: 'melchior' }, system: 'system', user: 'user' });
       assert.match(result, /"position":"accept"/);
       assert.equal(calls, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
+  it('returns a valid inconclusive JSON message after repeated empty responses', async () => {
+    const originalFetch = globalThis.fetch;
+    let calls = 0;
+
+    globalThis.fetch = async () => {
+      calls += 1;
+      return new Response(JSON.stringify({ choices: [{ message: { content: '' }, finish_reason: 'stop' }] }), { status: 200 });
+    };
+
+    try {
+      const callModel = createNodeModelRouter({ default: { apiKey: 'test-key' } });
+      const result = JSON.parse(await callModel({ node: { id: 'balthasar' }, system: 'system', user: 'user' }));
+      assert.equal(result.position, 'deliberate');
+      assert.match(result.reasoning, /no assistant content/i);
+      assert.equal(result.confidence, 0);
+      assert.equal(calls, 3);
     } finally {
       globalThis.fetch = originalFetch;
     }
