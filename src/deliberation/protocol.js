@@ -144,6 +144,21 @@ export function parseIndependentMessage(node, raw) {
       raw: String(raw || ''),
     };
   } catch (err) {
+    if (/no JSON object found|Unexpected token/i.test(err.message)) {
+      const text = String(raw || '').trim();
+      if (text) {
+        return {
+          node: node.id,
+          node_name: node.name,
+          role: node.role,
+          position: normalizePosition(text),
+          reasoning: text.slice(0, 600),
+          confidence: 0.4,
+          artifacts: [],
+          raw: text,
+        };
+      }
+    }
     return fallbackIndependentMessage(node, raw, err.message);
   }
 }
@@ -166,6 +181,24 @@ export function parseCrossReviewMessage(node, raw, positionBefore) {
       raw: String(raw || ''),
     };
   } catch (err) {
+    if (/no JSON object found|Unexpected token/i.test(err.message)) {
+      const text = String(raw || '').trim();
+      if (text) {
+        const positionAfter = normalizePosition(text) || positionBefore;
+        return {
+          node: node.id,
+          node_name: node.name,
+          role: node.role,
+          position_before: positionBefore,
+          action: normalizeAction('', positionBefore, positionAfter),
+          position_after: positionAfter,
+          target: null,
+          critique: text.slice(0, 700),
+          revision: '',
+          raw: text,
+        };
+      }
+    }
     return fallbackCrossReviewMessage(node, positionBefore, raw, err.message);
   }
 }

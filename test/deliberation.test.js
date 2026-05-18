@@ -44,9 +44,16 @@ describe('protocol parsing and artifacts', () => {
   });
 
   it('turns malformed output into an error message', () => {
-    const parsed = parseIndependentMessage({ id: 'melchior', name: 'MELCHIOR-1', role: '科学者' }, 'not json');
+    const parsed = parseIndependentMessage({ id: 'melchior', name: 'MELCHIOR-1', role: '科学者' }, '');
     assert.equal(parsed.action, ACTION.ERROR);
     assert.equal(parsed.position, POSITION.DELIBERATE);
+  });
+
+  it('uses natural language model output as reasoning when JSON is missing', () => {
+    const parsed = parseIndependentMessage({ id: 'balthasar', name: 'BALTHASAR-2', role: '母' }, 'I accept this because the user impact is low.');
+    assert.equal(parsed.position, POSITION.ACCEPT);
+    assert.equal(parsed.reasoning, 'I accept this because the user impact is low.');
+    assert.equal(parsed.action, undefined);
   });
 
   it('builds deterministic artifact', () => {
@@ -95,8 +102,8 @@ describe('orchestrator', () => {
     assert.equal(caseFile.judgment.verdict, VERDICT.NO_GO);
   });
 
-  it('degrades malformed model output instead of crashing', async () => {
-    const outputs = ['not json', 'not json', 'not json', 'not json', 'not json', 'not json'];
+  it('degrades empty model output instead of crashing', async () => {
+    const outputs = ['', '', '', '', '', ''];
     const callModel = async () => outputs.shift();
     const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel });
     assert.equal(caseFile.status, CASE_STATUS.FAILED);
