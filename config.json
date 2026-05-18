@@ -10,25 +10,22 @@
       "id": "melchior",
       "name": "Melchior-01",
       "role": "scientist",
-      "provider_type": "statuspage",
-      "status_url": "https://status.openai.com/api/v2/summary.json",
-      "components": ["Chat Completions", "Images", "Codex"]
+      "provider_type": "static",
+      "components": ["DeepSeek API", "deepseek-v4-pro", "MELCHIOR partition"]
     },
     {
       "id": "balthasar",
       "name": "Balthasar-02",
       "role": "mother",
-      "provider_type": "statuspage",
-      "status_url": "https://status.anthropic.com/api/v2/summary.json",
-      "components": ["API", "Claude App", "Console"]
+      "provider_type": "static",
+      "components": ["DeepSeek API", "deepseek-v4-pro", "BALTHASAR partition"]
     },
     {
       "id": "casper",
       "name": "Casper-03",
       "role": "woman",
-      "provider_type": "google_cloud",
-      "status_url": "https://status.cloud.google.com/incidents.json",
-      "components": ["Gemini API", "Vertex AI", "AI Studio"]
+      "provider_type": "static",
+      "components": ["DeepSeek API", "deepseek-v4-pro", "CASPER partition"]
     }
   ]
 }

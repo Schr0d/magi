@@ -5,6 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseStatuspage } from '../src/providers/statuspage.js';
 import { parseGoogleCloud } from '../src/providers/google-cloud.js';
+import { parseStatic } from '../src/providers/static.js';
 import { getAdapter } from '../src/providers/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -108,10 +109,26 @@ describe('adapter registry', () => {
     assert.equal(typeof fn, 'function');
   });
 
+  it('returns static adapter', () => {
+    const fn = getAdapter('static');
+    assert.equal(typeof fn, 'function');
+  });
+
   it('throws on unknown provider type', () => {
     assert.throws(
       () => getAdapter('nonexistent'),
       /Unknown provider_type/i
     );
+  });
+});
+
+describe('static adapter', () => {
+  it('maps configured MAGI components to operational status', () => {
+    const result = parseStatic({}, ['DeepSeek API', 'deepseek-v4-pro']);
+    assert.deepEqual(result.components, [
+      { name: 'DeepSeek API', status: 'operational' },
+      { name: 'deepseek-v4-pro', status: 'operational' },
+    ]);
+    assert.deepEqual(result.incidents, []);
   });
 });

@@ -1,9 +1,11 @@
 import { parseStatuspage } from './statuspage.js';
 import { parseGoogleCloud } from './google-cloud.js';
+import { parseStatic } from './static.js';
 
 const adapters = {
   statuspage: parseStatuspage,
   google_cloud: parseGoogleCloud,
+  static: parseStatic,
 };
 
 export function getAdapter(providerType) {

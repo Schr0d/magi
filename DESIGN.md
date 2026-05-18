@@ -1,7 +1,7 @@
 # Design System - Project MAGI
 
 ## Product Context
-- **What this is:** MAGI is a multi-LLM health monitoring and routing gateway dashboard. It watches OpenAI, Google, and Anthropic status signals, then presents provider health, incidents, and routing posture in a single operational screen.
+- **What this is:** MAGI is a three-partition deliberation terminal for one OpenAI-compatible model endpoint. MELCHIOR, BALTHASAR, and CASPER are personality partitions over the same API, not separate vendor status feeds.
 - **Who it's for:** Builders and operators running AI agents who need to know when a model provider is degraded and where traffic should fail over.
 - **Space/industry:** AI infrastructure, provider status monitoring, incident response, dynamic routing.
 - **Project type:** Data-dense monitoring dashboard first. Routing and consensus controls may arrive later, but v1 is a read-only command display.

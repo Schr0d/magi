@@ -94,7 +94,7 @@ function buildEvents(prev, current) {
 
 async function pollNode(config, timeoutMs) {
   try {
-    const raw = await fetchWithTimeout(config.status_url, timeoutMs);
+    const raw = config.status_url ? await fetchWithTimeout(config.status_url, timeoutMs) : {};
     const { components, incidents } = parseProvider(raw, config);
     return { error: null, components, incidents };
   } catch (err) {

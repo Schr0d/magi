@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is a 1995 EVA/MAGI-style deliberation terminal. Three MAGI bio-computer nodes evaluate a question, argue through a two-round protocol, and return a quorum judgment with a replayable case trace.
+MAGI is a 1995 EVA/MAGI-style deliberation terminal. Three MAGI bio-computer nodes evaluate a question through the same OpenAI-compatible API, argue through a two-round protocol, and return a quorum judgment with a replayable case trace.
 
 The public demo has three modes:
 
