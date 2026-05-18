@@ -1,0 +1,27 @@
+[
+  {
+    "number": "25123009",
+    "external_desc": "Gemini API experiencing elevated error rates",
+    "status_impact": "ONGOING",
+    "severity": "high",
+    "active": true,
+    "affected_products": [
+      { "title": "Gemini API" },
+      { "title": "Vertex AI" }
+    ],
+    "created": "2026-05-09T08:00:00Z",
+    "most_recent_update": "2026-05-09T09:00:00Z"
+  },
+  {
+    "number": "25123010",
+    "external_desc": "Cloud Storage latency",
+    "status_impact": "ONGOING",
+    "severity": "low",
+    "active": true,
+    "affected_products": [
+      { "title": "Cloud Storage" }
+    ],
+    "created": "2026-05-09T07:00:00Z",
+    "most_recent_update": "2026-05-09T08:00:00Z"
+  }
+]

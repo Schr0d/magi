@@ -1,0 +1,9 @@
+.env
+node_modules/
+dist/
+.gstack/
+/*.gif
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp

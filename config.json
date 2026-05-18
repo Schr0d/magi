@@ -1,0 +1,34 @@
+{
+  "poll": {
+    "interval_minutes": 5,
+    "request_timeout_ms": 10000,
+    "stale_threshold_minutes": 30,
+    "log_retention_days": 30
+  },
+  "nodes": [
+    {
+      "id": "melchior",
+      "name": "Melchior-01",
+      "role": "scientist",
+      "provider_type": "statuspage",
+      "status_url": "https://status.openai.com/api/v2/summary.json",
+      "components": ["Chat Completions", "Images", "Codex"]
+    },
+    {
+      "id": "balthasar",
+      "name": "Balthasar-02",
+      "role": "mother",
+      "provider_type": "statuspage",
+      "status_url": "https://status.anthropic.com/api/v2/summary.json",
+      "components": ["API", "Claude App", "Console"]
+    },
+    {
+      "id": "casper",
+      "name": "Casper-03",
+      "role": "woman",
+      "provider_type": "google_cloud",
+      "status_url": "https://status.cloud.google.com/incidents.json",
+      "components": ["Gemini API", "Vertex AI", "AI Studio"]
+    }
+  ]
+}

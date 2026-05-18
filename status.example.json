@@ -1,0 +1,50 @@
+{
+  "timestamp": "2026-05-09T00:00:00.000Z",
+  "nodes": [
+    {
+      "id": "melchior",
+      "name": "Melchior-01",
+      "status": "operational",
+      "health": 1,
+      "components": [
+        { "name": "Chat Completions", "status": "operational" },
+        { "name": "Images", "status": "operational" },
+        { "name": "Codex", "status": "operational" }
+      ],
+      "incidents": [],
+      "stale_since": null
+    },
+    {
+      "id": "balthasar",
+      "name": "Balthasar-02",
+      "status": "degraded",
+      "health": 0.667,
+      "components": [
+        { "name": "API", "status": "operational" },
+        { "name": "Claude App", "status": "degraded" },
+        { "name": "Console", "status": "operational" }
+      ],
+      "incidents": [],
+      "stale_since": null
+    },
+    {
+      "id": "casper",
+      "name": "Casper-03",
+      "status": "operational",
+      "health": 1,
+      "components": [
+        { "name": "Gemini API", "status": "operational" },
+        { "name": "Vertex AI", "status": "operational" },
+        { "name": "AI Studio", "status": "operational" }
+      ],
+      "incidents": [],
+      "stale_since": null
+    }
+  ],
+  "route_posture": {
+    "status": "caution",
+    "preferred_node_id": "melchior",
+    "reason": "degraded:balthasar"
+  },
+  "events": []
+}

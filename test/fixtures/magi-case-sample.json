@@ -1,0 +1,104 @@
+{
+  "case_id": "MAGI-SAMPLE-0001",
+  "question": "Should MAGI implement protocol trace before hosted backend?",
+  "status": "resolved",
+  "mode": "decision_convergence",
+  "created_at": "2026-05-11T00:00:00.000Z",
+  "completed_at": "2026-05-11T00:00:12.000Z",
+  "rounds": [
+    {
+      "round": 1,
+      "type": "independent_position",
+      "messages": [
+        {
+          "node": "melchior",
+          "node_name": "MELCHIOR-1",
+          "role": "科学者",
+          "position": "accept",
+          "reasoning": "Protocol shape is the critical unknown; hosting can wait until the trace proves useful.",
+          "confidence": 0.82,
+          "artifacts": []
+        },
+        {
+          "node": "balthasar",
+          "node_name": "BALTHASAR-2",
+          "role": "母",
+          "position": "deliberate",
+          "reasoning": "A public demo that asks for keys must be carefully labeled before live mode is encouraged.",
+          "confidence": 0.68,
+          "artifacts": []
+        },
+        {
+          "node": "casper",
+          "node_name": "CASPER-3",
+          "role": "女",
+          "position": "accept",
+          "reasoning": "The memorable part is watching MAGI revise itself; a static replay can show that first.",
+          "confidence": 0.76,
+          "artifacts": []
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "type": "cross_review",
+      "messages": [
+        {
+          "node": "melchior",
+          "node_name": "MELCHIOR-1",
+          "role": "科学者",
+          "position_before": "accept",
+          "action": "hold",
+          "position_after": "accept",
+          "target": "balthasar",
+          "critique": "Security warning is a UI requirement, not a blocker to protocol-first implementation.",
+          "revision": "Keep BYO mode opt-in and fixture replay default."
+        },
+        {
+          "node": "balthasar",
+          "node_name": "BALTHASAR-2",
+          "role": "母",
+          "position_before": "deliberate",
+          "action": "revise",
+          "position_after": "accept",
+          "target": "melchior",
+          "critique": "Accept only if browser key mode is explicitly marked disposable-key experimental mode.",
+          "revision": "Add warning copy and export/import rather than silent persistence."
+        },
+        {
+          "node": "casper",
+          "node_name": "CASPER-3",
+          "role": "女",
+          "position_before": "accept",
+          "action": "hold",
+          "position_after": "accept",
+          "target": null,
+          "critique": "The replay itself is the demo; live transport can follow.",
+          "revision": "Animate completed rounds after the case returns."
+        }
+      ]
+    }
+  ],
+  "judgment": {
+    "status": "resolved",
+    "verdict": "accepted",
+    "code": "ACCEPTED",
+    "detail": "Unanimous accept.",
+    "quorum": "3/3",
+    "convergence": "unanimous",
+    "dissent": [],
+    "positions": [
+      { "node": "melchior", "position": "accept", "action": "hold" },
+      { "node": "balthasar", "position": "accept", "action": "revise" },
+      { "node": "casper", "position": "accept", "action": "hold" }
+    ],
+    "artifact": {
+      "summary": "MAGI accepted protocol-first implementation with fixture replay as the public default.",
+      "recommendation": "Implement protocol trace before hosted backend, with BYO mode opt-in only.",
+      "rationale": "All three nodes converged after BALTHASAR's security concern was incorporated into the UI requirements.",
+      "dissent_summary": "No dissent recorded.",
+      "operator_next_step": "Build shared protocol tests, fixture replay, and explicit BYO key warning copy.",
+      "trace_ref": "MAGI-SAMPLE-0001#rounds"
+    }
+  }
+}

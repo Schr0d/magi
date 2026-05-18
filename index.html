@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAGI SYSTEM — Multi-Agent Grid Interface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="viewport">
+<div class="stage">
+<main class="terminal" aria-label="MAGI operational terminal">
+<header class="topbar">
+<div class="top-title"><strong>MAGI SYSTEM</strong><span>Multi-Agent Grid Interface</span></div>
+<div class="poll"><strong id="code-readout">CODE:378</strong><span id="poll-timestamp">LAST POLL --:--:-- JST</span></div>
+</header>
+
+<section class="strip" aria-label="mode strip">
+<div id="strip-scan">External API scan</div>
+<div id="strip-sync">Sync line active</div>
+<div id="strip-gate">Route gate standby</div>
+<div id="strip-danger">Nominal</div>
+<div id="strip-quorum">Quorum watch</div>
+<div>Log retention 30d</div>
+</section>
+
+<section class="main">
+<aside class="rail" aria-label="appeal and system metadata">
+<div class="rail-title">提訴</div>
+<div class="stamp" id="stamp-appeal">審議中</div>
+<div class="sys" id="sys-appeal">
+<span class="code">CODE:378</span>
+FILE:MAGI_SYS<br>
+EXTENTION:6008<br>
+EX_MODE:OFF<br>
+PRIORITY:AAA<br><br>
+NODE:3 BODY<br>
+JUDGE:ACTIVE<br>
+ROUTE:STANDBY
+</div>
+</aside>
+
+<section class="core-wrap" aria-label="MAGI central layout">
+<div class="core-screen">
+<article class="unit balthasar" id="node-balthasar" aria-label="Balthasar node">
+<div><span id="label-balthasar">BALTHASAR-2</span></div>
+</article>
+<article class="unit casper" id="node-casper" aria-label="Casper node">
+<span id="label-casper">CASPER-3</span>
+</article>
+<article class="unit melchior" id="node-melchior" aria-label="Melchior node">
+<span id="label-melchior">MELCHIOR-1</span>
+</article>
+</div>
+</section>
+
+<aside class="rail" aria-label="decision and emergency rail">
+<div class="rail-title">決議</div>
+<div class="stamp" id="stamp-judgment">審議中</div>
+<div class="right-info" id="right-judgment">
+ABSOLUTE-L<br>
+C50 // ROUTE OPEN<br>
+C51 // FAILOVER WAIT<br>
+DANGER EMERGENCY<br>
+ROUTE CONTROL<br><br>
+BALTHASAR NORMAL<br>
+MELCHIOR NORMAL<br>
+CASPER NORMAL
+</div>
+</aside>
+</section>
+
+<section class="console" aria-label="MAGI terminal log">
+<div class="readout" aria-label="clock and runtime readout">
+<div class="readout-title"><span class="jp">起動時</span><span class="en">/START TIME</span></div>
+<div class="seg" id="clock-display">22:50</div>
+<div class="readout-labels"><span id="tz-label">JST</span><span id="run-label">RUN 000:00</span><span id="countdown-label">T-300</span></div>
+</div>
+<div class="console-panel">
+<div class="console-label"><span class="jp">事象記録</span><span class="en">/EVENT LOG</span></div>
+<div class="console-line" id="event-log">
+--:-- AWAITING SCAN
+</div>
+</div>
+<div class="console-panel">
+<div class="console-label"><span class="jp">裁定記録</span><span class="en">/JUDGMENT LOG</span></div>
+<div class="console-line" id="judgment-log">
+QUORUM:--/3 ACCEPT<br>
+FAILOVER:STANDBY<br>
+NEXT_POLL:T-300
+</div>
+</div>
+<button class="remote-launch" id="remote-open" type="button" aria-haspopup="dialog" aria-controls="remote-panel">
+<span class="jp">質詢</span><span class="en">/ASK</span>
+</button>
+</section>
+
+<section class="remote-overlay" id="remote-overlay" hidden>
+<div class="remote-panel" id="remote-panel" role="dialog" aria-modal="true" aria-labelledby="remote-title">
+<div class="remote-head">
+  <div><span class="jp" id="remote-title">質詢</span><span class="en">/INTERROGATE</span></div>
+<button class="remote-close" id="remote-close" type="button" aria-label="Close remote">×</button>
+</div>
+<div class="remote-body">
+<textarea class="remote-input" id="remote-question" placeholder="MAGI SYSTEM へ質問を入力..." rows="3" maxlength="500"></textarea>
+<button class="remote-submit" id="remote-submit" type="button"><span class="jp">提訴</span><span class="en">SUBMIT</span></button>
+</div>
+<div class="remote-controls" aria-label="MAGI control mode">
+<button class="remote-key is-selected" type="button" data-remote-mode="fixture"><span class="jp">再生</span><span class="en">REPLAY</span></button>
+<button class="remote-key" type="button" data-remote-mode="local"><span class="jp">局所</span><span class="en">LOCAL</span></button>
+<button class="remote-key" type="button" data-remote-mode="byo"><span class="jp">鍵</span><span class="en">BYO KEY</span></button>
+</div>
+<div class="remote-key-wrap" id="remote-key-wrap" hidden>
+<div class="remote-provider-presets" aria-label="BYO provider presets">
+<button class="remote-preset is-selected" type="button" data-provider-preset="deepseek">DEEPSEEK</button>
+<button class="remote-preset" type="button" data-provider-preset="openai">OPENAI</button>
+<button class="remote-preset" type="button" data-provider-preset="openrouter">OPENROUTER</button>
+<button class="remote-preset" type="button" data-provider-preset="custom">CUSTOM</button>
+</div>
+<input class="remote-input remote-secret" id="remote-api-key" type="password" autocomplete="off" placeholder="GLOBAL API KEY // OPENAI-COMPATIBLE // DISPOSABLE KEY ONLY">
+<input class="remote-input remote-secret" id="remote-base-url" type="text" autocomplete="off" value="https://api.deepseek.com/v1" placeholder="BASE URL // https://api.openai.com/v1">
+<input class="remote-input remote-secret" id="remote-model" type="text" autocomplete="off" value="deepseek-chat" placeholder="GLOBAL MODEL // gpt-4o-mini">
+<details class="remote-advanced">
+<summary>ADVANCED NODE OVERRIDE</summary>
+<textarea class="remote-input remote-secret remote-node-config" id="remote-node-config" rows="5" spellcheck="false" placeholder='OPTIONAL NODE JSON: {"melchior":{"model":"..."},"balthasar":{"apiKey":"..."},"casper":{"baseUrl":"..."}}'></textarea>
+</details>
+<div class="remote-warning">OPENAI-COMPATIBLE BYO // BROWSER-MEMORY ONLY // USE DISPOSABLE LOW-LIMIT KEYS // EACH NODE MAY USE DIFFERENT MODEL/BASE URL/KEY</div>
+</div>
+<div class="remote-controls" aria-label="MAGI case controls">
+<button class="remote-key" id="remote-export" type="button"><span class="jp">搬出</span><span class="en">EXPORT</span></button>
+<button class="remote-key" id="remote-import" type="button"><span class="jp">搬入</span><span class="en">IMPORT</span></button>
+<input id="remote-import-file" type="file" accept="application/json,.json" hidden>
+</div>
+<div class="remote-status" id="remote-status">READY</div>
+<div class="remote-results" id="remote-results" hidden>
+<div class="remote-result-head">MAGI 審議結果</div>
+<div id="remote-nodes"></div>
+<div class="remote-judgment" id="remote-judgment"></div>
+</div>
+<div class="remote-note">MAGI DELIBERATION SYSTEM // THREE NODE CONSENSUS</div>
+</div>
+</section>
+</main>
+</div>
+</div>
+<script src="app.js" type="module"></script>
+</body>
+</html>

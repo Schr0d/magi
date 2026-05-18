@@ -1,0 +1,15 @@
+{
+  "name": "magi",
+  "version": "1.0.0",
+  "description": "MAGI — Multi-Agent Grid Interface: EVA-style multi-LLM health monitoring terminal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "poll": "node src/poll-status.js",
+    "start": "npx serve . -p 3000 --no-clipboard",
+    "deliberate": "node deliberation-server.js"
+  },
+  "keywords": ["magi", "eva", "monitoring", "llm"],
+  "license": "MIT"
+}

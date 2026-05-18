@@ -1,0 +1,14 @@
+{
+  "page": {
+    "id": "test-page",
+    "name": "Test Statuspage",
+    "url": "https://test.statuspage.io"
+  },
+  "components": [
+    { "name": "Chat Completions", "status": "operational", "group_id": null },
+    { "name": "Images", "status": "operational", "group_id": null },
+    { "name": "Codex", "status": "operational", "group_id": null },
+    { "name": "Audio", "status": "operational", "group_id": null }
+  ],
+  "incidents": []
+}
