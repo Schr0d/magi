@@ -56,6 +56,14 @@ describe('protocol parsing and artifacts', () => {
     assert.equal(parsed.action, undefined);
   });
 
+  it('salvages reasoning from truncated JSON output', () => {
+    const raw = '{"position":"accept","reasoning":"偶尔吃一次肯德基是可接受的小奖励。","confidence":0.';
+    const parsed = parseIndependentMessage({ id: 'balthasar', name: 'BALTHASAR-2', role: '母' }, raw);
+    assert.equal(parsed.position, POSITION.ACCEPT);
+    assert.equal(parsed.reasoning, '偶尔吃一次肯德基是可接受的小奖励。');
+    assert.equal(parsed.confidence, 0.4);
+  });
+
   it('builds deterministic artifact', () => {
     const judgment = collectJudgment([msg('melchior', POSITION.ACCEPT), msg('balthasar', POSITION.ACCEPT), msg('casper', POSITION.ACCEPT)]);
     const artifact = buildArtifact('question?', judgment, [msg('melchior', POSITION.ACCEPT)]);

@@ -145,6 +145,8 @@ export function parseIndependentMessage(node, raw) {
     };
   } catch (err) {
     if (/no JSON object found|Unexpected token/i.test(err.message)) {
+      const salvaged = salvageIndependentObject(node, raw);
+      if (salvaged) return salvaged;
       const text = String(raw || '').trim();
       if (text) {
         return {
@@ -182,6 +184,8 @@ export function parseCrossReviewMessage(node, raw, positionBefore) {
     };
   } catch (err) {
     if (/no JSON object found|Unexpected token/i.test(err.message)) {
+      const salvaged = salvageCrossReviewObject(node, raw, positionBefore);
+      if (salvaged) return salvaged;
       const text = String(raw || '').trim();
       if (text) {
         const positionAfter = normalizePosition(text) || positionBefore;
@@ -201,6 +205,61 @@ export function parseCrossReviewMessage(node, raw, positionBefore) {
     }
     return fallbackCrossReviewMessage(node, positionBefore, raw, err.message);
   }
+}
+
+function salvageIndependentObject(node, raw) {
+  const text = String(raw || '').trim();
+  if (!text.startsWith('{')) return null;
+  const reasoning = extractJsonStringField(text, 'reasoning') || extractJsonStringField(text, 'rationale');
+  if (!reasoning) return null;
+  const position = normalizePosition(extractJsonStringField(text, 'position') || reasoning);
+  return {
+    node: node.id,
+    node_name: node.name,
+    role: node.role,
+    position,
+    reasoning: reasoning.slice(0, 600),
+    confidence: clampConfidence(extractJsonNumberField(text, 'confidence') ?? 0.4),
+    artifacts: [],
+    raw: text,
+  };
+}
+
+function salvageCrossReviewObject(node, raw, positionBefore) {
+  const text = String(raw || '').trim();
+  if (!text.startsWith('{')) return null;
+  const critique = extractJsonStringField(text, 'critique') || extractJsonStringField(text, 'reasoning');
+  if (!critique) return null;
+  const positionAfter = normalizePosition(extractJsonStringField(text, 'position_after') || extractJsonStringField(text, 'position') || critique || positionBefore);
+  return {
+    node: node.id,
+    node_name: node.name,
+    role: node.role,
+    position_before: positionBefore,
+    action: normalizeAction(extractJsonStringField(text, 'action'), positionBefore, positionAfter),
+    position_after: positionAfter,
+    target: extractJsonStringField(text, 'target'),
+    critique: critique.slice(0, 700),
+    revision: (extractJsonStringField(text, 'revision') || '').slice(0, 700),
+    raw: text,
+  };
+}
+
+function extractJsonStringField(text, field) {
+  const quoted = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = text.match(new RegExp(`"${quoted}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)`));
+  if (!match) return '';
+  try {
+    return JSON.parse(`"${match[1].replace(/\\$/g, '')}"`);
+  } catch {
+    return match[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+  }
+}
+
+function extractJsonNumberField(text, field) {
+  const quoted = field.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = text.match(new RegExp(`"${quoted}"\\s*:\\s*(-?\\d+(?:\\.\\d+)?)(?!\\.)`));
+  return match ? Number(match[1]) : null;
 }
 
 export function collectJudgment(messages) {
