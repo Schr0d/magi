@@ -181,7 +181,7 @@ function validateByoSubmission(question) {
   const model = deliberationState.model.trim();
   if (!apiKey) return 'KEY REQUIRED // ENTER DISPOSABLE LOW-LIMIT KEY';
   if (!model) return 'MODEL REQUIRED // SELECT PROVIDER OR ENTER MODEL';
-  if (!/^https?:\/\//.test(baseUrl)) return 'BASE URL INVALID // USE https://.../v1';
+  if (!/^https?:\/\//.test(baseUrl)) return 'BASE URL INVALID // USE https://api.deepseek.com';
 
   const raw = deliberationState.nodeConfigText.trim();
   if (raw) {
@@ -190,7 +190,7 @@ function validateByoSubmission(question) {
       for (const nodeId of ['melchior', 'balthasar', 'casper']) {
         const node = parsed[nodeId];
         if (node?.baseUrl && !/^https?:\/\//.test(String(node.baseUrl))) {
-          return `${nodeId.toUpperCase()} BASE URL INVALID // USE https://.../v1`;
+          return `${nodeId.toUpperCase()} BASE URL INVALID // USE https://api.deepseek.com`;
         }
       }
     } catch {
