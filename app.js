@@ -221,6 +221,7 @@ function friendlyModelError(message) {
   if (/API 429/i.test(text)) return 'RATE LIMITED // WAIT OR USE ANOTHER KEY';
   if (/abort|timeout/i.test(text)) return 'PROVIDER TIMEOUT // RETRY OR SWITCH NODE MODEL';
   if (/failed to fetch|cors|network/i.test(text)) return 'CORS BLOCKED // TRY LOCAL PROXY OR ANOTHER PROVIDER';
+  if (/empty assistant content|empty model output/i.test(text)) return 'EMPTY MODEL RESPONSE // RETRIED ONCE // CHECK MODEL OR PROVIDER';
   if (/json|object|model output/i.test(text)) return 'NODE OUTPUT CORRUPT // MAGI FALLBACK ENGAGED';
   return text || 'MODEL FAILURE // CHECK PROVIDER SETTINGS';
 }

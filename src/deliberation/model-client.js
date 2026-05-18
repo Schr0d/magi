@@ -1,37 +1,72 @@
 export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-v4-pro', baseUrl = 'https://api.deepseek.com', apiUrl, timeoutMs = 20000 } = {}) {
   return async function callModel({ system, user, maxTokens = 400 }) {
     if (!apiKey) throw new Error('OPENAI_COMPATIBLE_API_KEY missing');
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const url = apiUrl || `${String(baseUrl || '').replace(/\/$/, '')}/chat/completions`;
-    try {
-      const resp = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { role: 'system', content: system },
-            { role: 'user', content: user },
-          ],
-          temperature: 0.7,
-          max_tokens: maxTokens,
-        }),
-        signal: controller.signal,
-      });
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => '');
-        throw new Error(`API ${resp.status}: ${text.slice(0, 200)}`);
+    let lastEmpty = null;
+
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              { role: 'system', content: system },
+              { role: 'user', content: user },
+            ],
+            temperature: 0.2,
+            max_tokens: maxTokens,
+            response_format: { type: 'json_object' },
+          }),
+          signal: controller.signal,
+        });
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => '');
+          throw new Error(`API ${resp.status}: ${text.slice(0, 200)}`);
+        }
+        const json = await resp.json();
+        const content = extractAssistantContent(json);
+        if (content) return content;
+        lastEmpty = summarizeEmptyResponse(json);
+      } finally {
+        clearTimeout(timeout);
       }
-      const json = await resp.json();
-      return json.choices?.[0]?.message?.content || '';
-    } finally {
-      clearTimeout(timeout);
     }
+
+    throw new Error(`empty assistant content: ${lastEmpty || 'no choices returned'}`);
   };
+}
+
+export function extractAssistantContent(json) {
+  const choice = json?.choices?.[0];
+  const message = choice?.message || choice?.delta || {};
+  const content = normalizeContent(message.content || choice?.text || json?.output_text);
+  if (content) return content;
+  return normalizeContent(message.reasoning_content);
+}
+
+function normalizeContent(value) {
+  if (typeof value === 'string') return value.trim();
+  if (Array.isArray(value)) {
+    return value.map(part => {
+      if (typeof part === 'string') return part;
+      return part?.text || part?.content || part?.input_text || '';
+    }).join('').trim();
+  }
+  return '';
+}
+
+function summarizeEmptyResponse(json) {
+  const choice = json?.choices?.[0];
+  const reason = choice?.finish_reason || choice?.finish_details?.type;
+  const role = choice?.message?.role || choice?.delta?.role;
+  return [`finish=${reason || 'unknown'}`, `role=${role || 'unknown'}`].join(' ');
 }
 
 export const createDeepSeekClient = createOpenAICompatibleClient;

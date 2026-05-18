@@ -49,6 +49,8 @@ Provider presets:
 
 Advanced per-node override JSON:
 
+Leave this blank to run all three MAGI partitions through the same global API key, base URL, and model. Fill it only when you want MELCHIOR, BALTHASAR, and CASPER to use different OpenAI-compatible endpoints or models.
+
 ```json
 {
   "melchior": { "model": "gpt-4o-mini" },

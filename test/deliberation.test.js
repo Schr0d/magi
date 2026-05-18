@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runDeliberationCase } from '../src/deliberation/orchestrator.js';
-import { createNodeModelRouter } from '../src/deliberation/model-client.js';
+import { createNodeModelRouter, extractAssistantContent } from '../src/deliberation/model-client.js';
 import { ACTION, CASE_STATUS, CONVERGENCE, POSITION, VERDICT, buildArtifact, collectJudgment, parseIndependentMessage, validateCase } from '../src/deliberation/protocol.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -138,5 +138,58 @@ describe('model router', () => {
       'https://api.deepseek.com/chat/completions',
       'https://api.deepseek.com/chat/completions',
     ]);
+  });
+
+  it('allows per-node JSON override configs to run independently', async () => {
+    const originalFetch = globalThis.fetch;
+    const seen = [];
+
+    globalThis.fetch = async (url, options) => {
+      seen.push({ url: String(url), model: JSON.parse(options.body).model });
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 });
+    };
+
+    try {
+      const callModel = createNodeModelRouter({
+        default: { apiKey: 'global-key', baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4-pro' },
+        balthasar: { apiKey: 'node-key', baseUrl: 'https://node.example', model: 'node-model' },
+      });
+      await callModel({ node: { id: 'melchior' }, system: 'system', user: 'user' });
+      await callModel({ node: { id: 'balthasar' }, system: 'system', user: 'user' });
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+
+    assert.deepEqual(seen, [
+      { url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro' },
+      { url: 'https://node.example/chat/completions', model: 'node-model' },
+    ]);
+  });
+
+  it('extracts assistant text from common OpenAI-compatible response shapes', () => {
+    assert.equal(extractAssistantContent({ choices: [{ message: { content: ' ok ' } }] }), 'ok');
+    assert.equal(extractAssistantContent({ choices: [{ text: ' text ' }] }), 'text');
+    assert.equal(extractAssistantContent({ output_text: ' output ' }), 'output');
+    assert.equal(extractAssistantContent({ choices: [{ message: { content: [{ text: 'array' }] } }] }), 'array');
+  });
+
+  it('retries once when provider returns empty assistant content', async () => {
+    const originalFetch = globalThis.fetch;
+    let calls = 0;
+
+    globalThis.fetch = async () => {
+      calls += 1;
+      const content = calls === 1 ? '' : '{"position":"accept","reasoning":"ok","confidence":1,"artifacts":[]}';
+      return new Response(JSON.stringify({ choices: [{ message: { content } }] }), { status: 200 });
+    };
+
+    try {
+      const callModel = createNodeModelRouter({ default: { apiKey: 'test-key' } });
+      const result = await callModel({ node: { id: 'melchior' }, system: 'system', user: 'user' });
+      assert.match(result, /"position":"accept"/);
+      assert.equal(calls, 2);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
   });
 });
