@@ -23,8 +23,8 @@ if (existsSync(envPath)) {
 
 const PORT = Number(process.env.PORT || 3001);
 const API_KEY = process.env.DEEPSEEK_API_KEY || '';
-const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-const BASE_URL = process.env.OPENAI_COMPATIBLE_BASE_URL || process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com/v1';
+const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-v4-pro';
+const BASE_URL = process.env.OPENAI_COMPATIBLE_BASE_URL || process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
 
 const callModel = createOpenAICompatibleClient({ apiKey: API_KEY, model: MODEL, baseUrl: BASE_URL, timeoutMs: 20000 });
 

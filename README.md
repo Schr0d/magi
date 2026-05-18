@@ -42,7 +42,7 @@ Provider presets:
 
 | Preset | Base URL | Default model |
 |--------|----------|---------------|
-| `DEEPSEEK` | `https://api.deepseek.com/v1` | `deepseek-chat` |
+| `DEEPSEEK` | `https://api.deepseek.com` | `deepseek-v4-pro` |
 | `OPENAI` | `https://api.openai.com/v1` | `gpt-4o-mini` |
 | `OPENROUTER` | `https://openrouter.ai/api/v1` | `openai/gpt-4o-mini` |
 | `CUSTOM` | blank | blank |
@@ -52,7 +52,7 @@ Advanced per-node override JSON:
 ```json
 {
   "melchior": { "model": "gpt-4o-mini" },
-  "balthasar": { "baseUrl": "https://api.deepseek.com/v1", "model": "deepseek-chat" },
+  "balthasar": { "baseUrl": "https://api.deepseek.com", "model": "deepseek-v4-pro" },
   "casper": { "baseUrl": "https://openrouter.ai/api/v1", "model": "openai/gpt-4o-mini" }
 }
 ```
@@ -73,8 +73,8 @@ Optional `.env`:
 
 ```env
 DEEPSEEK_API_KEY=sk-...
-DEEPSEEK_MODEL=deepseek-chat
-OPENAI_COMPATIBLE_BASE_URL=https://api.deepseek.com/v1
+DEEPSEEK_MODEL=deepseek-v4-pro
+OPENAI_COMPATIBLE_BASE_URL=https://api.deepseek.com
 ```
 
 ## MAGI Nodes

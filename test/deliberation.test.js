@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runDeliberationCase } from '../src/deliberation/orchestrator.js';
+import { createNodeModelRouter } from '../src/deliberation/model-client.js';
 import { ACTION, CASE_STATUS, CONVERGENCE, POSITION, VERDICT, buildArtifact, collectJudgment, parseIndependentMessage, validateCase } from '../src/deliberation/protocol.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -100,5 +101,42 @@ describe('orchestrator', () => {
     const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel });
     assert.equal(caseFile.status, CASE_STATUS.FAILED);
     assert.equal(caseFile.judgment.verdict, VERDICT.FAILED);
+  });
+});
+
+describe('model router', () => {
+  it('serializes calls sharing the same provider config', async () => {
+    const originalFetch = globalThis.fetch;
+    let active = 0;
+    let peak = 0;
+    const seenModels = [];
+    const seenUrls = [];
+
+    globalThis.fetch = async (url, options) => {
+      active += 1;
+      peak = Math.max(peak, active);
+      seenUrls.push(String(url));
+      seenModels.push(JSON.parse(options.body).model);
+      await new Promise(resolve => setTimeout(resolve, 5));
+      active -= 1;
+      return new Response(JSON.stringify({ choices: [{ message: { content: 'ok' } }] }), { status: 200 });
+    };
+
+    try {
+      const callModel = createNodeModelRouter({ default: { apiKey: 'test-key' } });
+      await Promise.all(['melchior', 'balthasar', 'casper'].map(id => (
+        callModel({ node: { id }, system: 'system', user: 'user' })
+      )));
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+
+    assert.equal(peak, 1);
+    assert.deepEqual(seenModels, ['deepseek-v4-pro', 'deepseek-v4-pro', 'deepseek-v4-pro']);
+    assert.deepEqual(seenUrls, [
+      'https://api.deepseek.com/chat/completions',
+      'https://api.deepseek.com/chat/completions',
+      'https://api.deepseek.com/chat/completions',
+    ]);
   });
 });

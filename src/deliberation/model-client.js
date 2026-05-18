@@ -1,4 +1,4 @@
-export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-chat', baseUrl = 'https://api.deepseek.com/v1', apiUrl, timeoutMs = 20000 } = {}) {
+export function createOpenAICompatibleClient({ apiKey, model = 'deepseek-v4-pro', baseUrl = 'https://api.deepseek.com', apiUrl, timeoutMs = 20000 } = {}) {
   return async function callModel({ system, user, maxTokens = 400 }) {
     if (!apiKey) throw new Error('OPENAI_COMPATIBLE_API_KEY missing');
     const controller = new AbortController();
@@ -39,6 +39,7 @@ export const createDeepSeekClient = createOpenAICompatibleClient;
 export function createNodeModelRouter(configs = {}) {
   const fallbackConfig = configs.default || configs;
   const clients = new Map();
+  const queues = new Map();
 
   return function callNodeModel({ node, system, user, maxTokens }) {
     const nodeConfig = configs[node?.id] || fallbackConfig;
@@ -51,6 +52,9 @@ export function createNodeModelRouter(configs = {}) {
     if (!clients.has(cacheKey)) {
       clients.set(cacheKey, createOpenAICompatibleClient(nodeConfig));
     }
-    return clients.get(cacheKey)({ system, user, maxTokens });
+    const previous = queues.get(cacheKey) || Promise.resolve();
+    const next = previous.then(() => clients.get(cacheKey)({ system, user, maxTokens }));
+    queues.set(cacheKey, next.catch(() => {}));
+    return next;
   };
 }

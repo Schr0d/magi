@@ -52,7 +52,7 @@ const DELIBERATION_BLINK_MS = 700;
 let deliberationCueTimer = null;
 
 const PROVIDER_PRESETS = Object.freeze({
-  deepseek: { baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
+  deepseek: { baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4-pro' },
   openai: { baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
   openrouter: { baseUrl: 'https://openrouter.ai/api/v1', model: 'openai/gpt-4o-mini' },
   custom: { baseUrl: '', model: '' },
@@ -63,8 +63,8 @@ const deliberationState = {
   mode: 'fixture',
   providerPreset: 'deepseek',
   apiKey: '',
-  baseUrl: 'https://api.deepseek.com/v1',
-  model: 'deepseek-chat',
+  baseUrl: 'https://api.deepseek.com',
+  model: 'deepseek-v4-pro',
   nodeConfigText: '',
   question: '',
   case: null,
@@ -155,8 +155,8 @@ function wait(ms) {
 function buildByoModelConfig() {
   const defaults = {
     apiKey: deliberationState.apiKey.trim(),
-    baseUrl: deliberationState.baseUrl.trim() || 'https://api.openai.com/v1',
-    model: deliberationState.model.trim() || 'gpt-4o-mini',
+    baseUrl: deliberationState.baseUrl.trim() || 'https://api.deepseek.com',
+    model: deliberationState.model.trim() || 'deepseek-v4-pro',
   };
   if (!defaults.apiKey) throw new Error('global API key required');
 
