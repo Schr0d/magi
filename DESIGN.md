@@ -30,7 +30,7 @@
 
 ## Risks
 - **Strong EVA/MAGI visual language:** This is memorable and specific, but it rejects neutral enterprise dashboard norms.
-- **Japanese/English terminal labels:** `提訴`, `決議`, `審議中`, `事象記録/EVENT LOG`, and `裁定記録/JUDGMENT LOG` create the right fiction, but they must remain functional and legible.
+- **Japanese/English terminal labels:** `提訴`, `決議`, `審議中`, `事象記録/EVENT LOG`, `裁定結果/VERDICT`, and `裁定記録/JUDGMENT LOG` create the right fiction, but they must remain functional and legible.
 - **No modern comfort styling:** Square borders, compact spacing, and no rounded cards make it feel authentic, but less familiar to users expecting SaaS dashboards.
 
 ## Typography
@@ -76,6 +76,7 @@
 - **Core geometry:** The three node blocks use deliberate angular cuts. `BALTHASAR` sits above; `CASPER` and `MELCHIOR` sit slightly higher than the bottom baseline to tighten the center negative space. The lower blocks are pulled outward enough to avoid a parallel-parallelogram feel, while their cut edges remain visually related to the upper cut.
 - **Right rail:** `決議` judgment/status metadata with a matching red `審議中` stamp and bottom normal-state block.
 - **Bottom row:** Three boxed panels: `起動時/START TIME`, `事象記録/EVENT LOG`, `裁定記録/JUDGMENT LOG`.
+- **Remote interrogation panel:** The `質詢/ASK+LOG` control opens a two-column terminal panel. The left column keeps the question, mode, BYO key controls, and MAGI result block. The right column shows `裁定結果/VERDICT` above `裁定記録/JUDGMENT LOG`, so the final judgment and the round-by-round trace are visible together.
 - **Alignment rule:** `ROUTE:STANDBY` and `CASPER NORMAL` align on the same visual baseline.
 - **Border radius:** `0` everywhere.
 - **Borders:** 1-3px solid lines only. No rounded cards, shadows-as-cards, pills, or soft containers.
@@ -93,6 +94,7 @@
 - **Red deliberation stamp:** Fixed-width red rectangle containing `審議中`; text must stay fully inside the box.
 - **Metadata panels:** Dense small monospace text. Use the same small-text style for `提訴` details, `決議` details, and logs.
 - **Log panels:** Boxed bottom panels with bilingual labels in the format `日本語/ENGLISH`, with no spaces around `/`. The Japanese segment must render in Mincho, not sans-serif.
+- **Remote trace panel:** The verdict block is a red warning-style readout. The trace log is dense monospace and may scroll independently; the MAGI result block should remain large enough to avoid its own scrollbar in normal replay cases.
 - **Controls:** Do not add fake controls. If a control is visible, it must map to a real function.
 
 ## Responsive Rules
@@ -119,3 +121,5 @@
 | 2026-05-09 | Removed center logo overlay | The center core should not contain an extra `MAGI` wordmark or underline between the three node blocks. |
 | 2026-05-09 | Locked fixed-stage scaling | The preview uses a 1365x768 stage scaled to the viewport instead of responsive reflow. |
 | 2026-05-09 | Tuned node block geometry | The three supercomputer blocks use deeper cut corners and the lower pair is raised slightly to tighten the center negative space. |
+| 2026-05-19 | Moved verdict and trace into right-side interrogation rail | Multi-round convergence needs the final judgment and decision log visible together instead of hiding the trace under the question form. |
+| 2026-05-19 | Renamed the launch control to `ASK+LOG` | The control now advertises that it opens both interrogation input and case trace review. |

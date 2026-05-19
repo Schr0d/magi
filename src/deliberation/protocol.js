@@ -42,6 +42,18 @@ export const CONVERGENCE = Object.freeze({
   DEADLOCK: 'deadlock',
   BLOCKED: 'blocked',
   PARTIAL: 'partial',
+  STABLE_HOLD: 'stable_hold',
+  OSCILLATION: 'oscillation',
+  BUDGET_EXHAUSTED: 'budget_exhausted',
+});
+
+export const TERMINATION_REASON = Object.freeze({
+  NO_GO: 'no_go',
+  UNANIMOUS: 'unanimous',
+  STABLE_HOLD: 'stable_hold',
+  OSCILLATION: 'oscillation',
+  BUDGET_EXHAUSTED: 'budget_exhausted',
+  CONTINUE: 'continue',
 });
 
 export const NODES = Object.freeze([
@@ -287,6 +299,44 @@ export function collectJudgment(messages) {
   return baseJudgment(CASE_STATUS.RESOLVED, VERDICT.DELIBERATE, CONVERGENCE.DEADLOCK, messages, 'No majority.');
 }
 
+export function analyzeConvergence(rounds, { maxRounds = 4, modelCalls = 0, maxModelCalls = 12, budgetExhausted = false } = {}) {
+  const lastRound = rounds[rounds.length - 1];
+  const messages = lastRound?.messages || [];
+  const judgment = collectJudgment(messages);
+
+  if (judgment.verdict === VERDICT.NO_GO) {
+    return convergenceResult(true, TERMINATION_REASON.NO_GO, judgment, rounds, modelCalls, maxRounds, maxModelCalls);
+  }
+
+  if (judgment.convergence === CONVERGENCE.UNANIMOUS && judgment.verdict !== VERDICT.DELIBERATE) {
+    return convergenceResult(true, TERMINATION_REASON.UNANIMOUS, judgment, rounds, modelCalls, maxRounds, maxModelCalls);
+  }
+
+  if (hasStableHold(rounds)) {
+    const stableJudgment = { ...judgment, convergence: CONVERGENCE.STABLE_HOLD, detail: 'Two consecutive cross-review rounds held the same positions.' };
+    return convergenceResult(true, TERMINATION_REASON.STABLE_HOLD, stableJudgment, rounds, modelCalls, maxRounds, maxModelCalls);
+  }
+
+  if (hasOscillation(rounds)) {
+    const oscillationJudgment = forceDeliberateJudgment(judgment, messages, CONVERGENCE.OSCILLATION, 'Position signature repeated without stable hold; MAGI oscillation detected.');
+    return convergenceResult(true, TERMINATION_REASON.OSCILLATION, oscillationJudgment, rounds, modelCalls, maxRounds, maxModelCalls);
+  }
+
+  if (budgetExhausted || rounds.length >= maxRounds || modelCalls >= maxModelCalls) {
+    const budgetJudgment = { ...judgment, convergence: CONVERGENCE.BUDGET_EXHAUSTED, detail: 'Deliberation stopped by round or model-call budget.' };
+    return convergenceResult(true, TERMINATION_REASON.BUDGET_EXHAUSTED, budgetJudgment, rounds, modelCalls, maxRounds, maxModelCalls);
+  }
+
+  return convergenceResult(false, TERMINATION_REASON.CONTINUE, judgment, rounds, modelCalls, maxRounds, maxModelCalls);
+}
+
+export function roundSignature(round) {
+  return (round?.messages || [])
+    .map(m => `${m.node}:${normalizePosition(m.position_after || m.position)}`)
+    .sort()
+    .join('|');
+}
+
 export function buildArtifact(question, judgment, messages) {
   const dissent = judgment.dissent.length ? `Dissent: ${judgment.dissent.join(', ')}` : 'No dissent recorded.';
   const reasons = messages.map(m => `${m.node}:${m.position_after || m.position}:${m.critique || m.reasoning}`).join(' | ');
@@ -319,6 +369,56 @@ function baseJudgment(status, verdict, convergence, messages, detail) {
     dissent: majorityPosition ? positions.filter(p => p.position !== majorityPosition || p.action === ACTION.ERROR).map(p => p.node) : [],
     positions,
     artifact: null,
+  };
+}
+
+function convergenceResult(terminal, reason, judgment, rounds, modelCalls, maxRounds, maxModelCalls) {
+  return {
+    terminal,
+    reason,
+    judgment,
+    termination: {
+      reason,
+      round: rounds.length,
+      max_rounds: maxRounds,
+      model_calls: modelCalls,
+      max_model_calls: maxModelCalls,
+    },
+  };
+}
+
+function hasStableHold(rounds) {
+  if (rounds.length < 3) return false;
+  const last = rounds[rounds.length - 1];
+  const previous = rounds[rounds.length - 2];
+  if (last.type !== ROUND_TYPE.CROSS_REVIEW || previous.type !== ROUND_TYPE.CROSS_REVIEW) return false;
+  if (roundSignature(last) !== roundSignature(previous)) return false;
+  return allHold(last.messages) && allHold(previous.messages);
+}
+
+function allHold(messages = []) {
+  return messages.length > 0 && messages.every(m => (m.action || ACTION.HOLD) === ACTION.HOLD);
+}
+
+function hasOscillation(rounds) {
+  if (rounds.some(round => (round.messages || []).some(m => m.action === ACTION.ERROR))) return false;
+  const signatures = rounds.map(roundSignature).filter(Boolean);
+  if (signatures.length < 3) return false;
+  const current = signatures[signatures.length - 1];
+  return signatures.slice(0, -2).includes(current);
+}
+
+function forceDeliberateJudgment(judgment, messages, convergence, detail) {
+  const positions = messages.map(m => ({ node: m.node, position: m.position_after || m.position, action: m.action || ACTION.HOLD }));
+  return {
+    ...judgment,
+    status: CASE_STATUS.RESOLVED,
+    verdict: VERDICT.DELIBERATE,
+    code: VERDICT.DELIBERATE.toUpperCase(),
+    detail,
+    convergence,
+    dissent: positions.filter(p => p.position !== POSITION.DELIBERATE || p.action === ACTION.ERROR).map(p => p.node),
+    positions,
   };
 }
 

@@ -25,6 +25,7 @@ const PORT = Number(process.env.PORT || 3001);
 const API_KEY = process.env.DEEPSEEK_API_KEY || '';
 const MODEL = process.env.DEEPSEEK_MODEL || 'deepseek-v4-pro';
 const BASE_URL = process.env.OPENAI_COMPATIBLE_BASE_URL || process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com';
+const MAX_ROUNDS = 4;
 
 const callModel = createOpenAICompatibleClient({ apiKey: API_KEY, model: MODEL, baseUrl: BASE_URL, timeoutMs: 20000 });
 
@@ -73,7 +74,7 @@ const server = http.createServer(async (req, res) => {
       const caseFile = await runDeliberationCase({
         question,
         callModel,
-        maxRounds: Math.min(Number(parsed.max_rounds || 2), 2),
+        maxRounds: Math.min(Math.max(Number(parsed.max_rounds || MAX_ROUNDS), 1), MAX_ROUNDS),
       });
 
       sendJson(res, 200, headers, { case: caseFile });

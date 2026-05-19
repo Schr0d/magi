@@ -226,6 +226,38 @@ function friendlyModelError(message) {
   return text || 'MODEL FAILURE // CHECK PROVIDER SETTINGS';
 }
 
+function renderTraceLog(caseFile) {
+  if (!caseFile) return 'TRACE EMPTY // AWAITING CASE';
+  const lines = [`CASE:${caseFile.case_id || 'UNKNOWN'}`];
+  for (const round of caseFile.rounds || []) {
+    lines.push(`ROUND ${String(round.round).padStart(2, '0')} ${String(round.type || '').toUpperCase()}`);
+    for (const msg of round.messages || []) {
+      const position = String(msg.position_after || msg.position || 'deliberate').toUpperCase();
+      const action = msg.action ? `${String(msg.action).toUpperCase()} ` : '';
+      const node = String(msg.node || 'node').toUpperCase();
+      const text = String(msg.critique || msg.reasoning || msg.revision || '').replace(/\s+/g, ' ').slice(0, 96);
+      lines.push(`${node} ${action}${position}`);
+      if (text) lines.push(`> ${text}`);
+    }
+  }
+  if (caseFile.termination) lines.push(`STOP:${String(caseFile.termination.reason || '').toUpperCase()} R${caseFile.termination.round}/${caseFile.termination.max_rounds} CALLS:${caseFile.termination.model_calls}/${caseFile.termination.max_model_calls}`);
+  if (caseFile.judgment) lines.push(`VERDICT:${String(caseFile.judgment.verdict).toUpperCase()} // ${String(caseFile.judgment.convergence).toUpperCase()}`);
+  return lines.join('<br>');
+}
+
+function renderTraceVerdict(caseFile) {
+  if (!caseFile?.judgment) return 'NO CASE SEALED<br>PRESS ASK TO INTERROGATE MAGI';
+  const j = caseFile.judgment;
+  const termination = caseFile.termination;
+  return [
+    `<span class="remote-verdict-main">${String(j.verdict).toUpperCase()}</span>`,
+    `CONVERGENCE:${String(j.convergence || '').toUpperCase()}`,
+    `DETAIL:${String(j.detail || '').toUpperCase()}`,
+    termination ? `STOP:${String(termination.reason || '').toUpperCase()} // ROUND ${termination.round}/${termination.max_rounds}` : '',
+    `QUORUM:${j.quorum || '--/3'}`,
+  ].filter(Boolean).join('<br>');
+}
+
 function startDeliberationCue() {
   stopDeliberationCue();
   magiSound.play('vote');
@@ -453,8 +485,8 @@ function renderRemote() {
     const soundStatus = magiSound.isArmed() ? 'SOUND:ARMED' : 'SOUND:SAFE';
     if (deliberationState.loading) statusEl.textContent = `MAGI SYSTEM 審議中... // TYPE-666 FIREWALL // ${soundStatus}`;
     else if (deliberationState.error) statusEl.textContent = `ERROR: ${deliberationState.error}`;
-    else if (deliberationState.nodes.length > 0) statusEl.textContent = `RESULT SEALED // PRESS ASK TO REVIEW CASE // ${soundStatus}`;
-    else statusEl.textContent = `READY // MODE:${deliberationState.mode.toUpperCase()} // ${soundStatus}`;
+    else if (deliberationState.nodes.length > 0) statusEl.textContent = `RESULT SEALED // ASK PANEL SHOWS VERDICT + TRACE LOG // ${soundStatus}`;
+    else statusEl.textContent = `READY // ASK OPENS VERDICT + TRACE LOG // MODE:${deliberationState.mode.toUpperCase()} // ${soundStatus}`;
   }
 
   document.querySelectorAll('[data-remote-mode]').forEach(button => {
@@ -470,6 +502,12 @@ function renderRemote() {
 
   const resultsEl = document.getElementById('remote-results');
   if (resultsEl) resultsEl.hidden = deliberationState.nodes.length === 0;
+
+  const traceEl = document.getElementById('remote-trace-log');
+  if (traceEl) traceEl.innerHTML = renderTraceLog(deliberationState.case);
+
+  const traceVerdictEl = document.getElementById('remote-trace-verdict');
+  if (traceVerdictEl) traceVerdictEl.innerHTML = renderTraceVerdict(deliberationState.case);
 
   const nodesEl = document.getElementById('remote-nodes');
   if (nodesEl && deliberationState.nodes.length > 0) {
@@ -550,14 +588,14 @@ async function submitDeliberation(question) {
     } else if (deliberationState.mode === 'byo') {
       if (!question.trim()) throw new Error('question required');
       const callModel = createNodeModelRouter(buildByoModelConfig());
-      setDeliberationCase(await runDeliberationCase({ question, callModel }));
+      setDeliberationCase(await runDeliberationCase({ question, callModel, maxRounds: 4 }));
       cue = judgmentCue(deliberationState.judgment);
     } else {
       if (!question.trim()) throw new Error('question required');
       const resp = await fetch(`${DELIBERATION_PROXY}/api/deliberate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question, max_rounds: 2 }),
+        body: JSON.stringify({ question, max_rounds: 4 }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error?.message || `proxy ${resp.status}`);

@@ -110,6 +110,75 @@ describe('orchestrator', () => {
     assert.equal(caseFile.judgment.verdict, VERDICT.NO_GO);
   });
 
+  it('stops immediately on unanimous independent positions', async () => {
+    const outputs = [
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+    ];
+    const callModel = async () => outputs.shift();
+    const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel, maxRounds: 4 });
+    assert.equal(caseFile.rounds.length, 1);
+    assert.equal(caseFile.termination.reason, 'unanimous');
+    assert.equal(caseFile.judgment.convergence, CONVERGENCE.UNANIMOUS);
+  });
+
+  it('converges after two consecutive stable hold rounds', async () => {
+    const outputs = [
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+      '{"position":"reject","reasoning":"r1","confidence":0.6,"artifacts":[]}',
+      '{"position":"accept","reasoning":"r1","confidence":0.7,"artifacts":[]}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+    ];
+    const callModel = async () => outputs.shift();
+    const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel, maxRounds: 4 });
+    assert.equal(caseFile.rounds.length, 3);
+    assert.equal(caseFile.termination.reason, 'stable_hold');
+    assert.equal(caseFile.judgment.verdict, VERDICT.ACCEPTED);
+    assert.equal(caseFile.judgment.convergence, CONVERGENCE.STABLE_HOLD);
+  });
+
+  it('stops as deliberate when positions oscillate', async () => {
+    const outputs = [
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+      '{"position":"reject","reasoning":"r1","confidence":0.6,"artifacts":[]}',
+      '{"position":"accept","reasoning":"r1","confidence":0.7,"artifacts":[]}',
+      '{"action":"revise","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+      '{"action":"revise","position_after":"accept","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+    ];
+    const callModel = async () => outputs.shift();
+    const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel, maxRounds: 4 });
+    assert.equal(caseFile.rounds.length, 3);
+    assert.equal(caseFile.termination.reason, 'oscillation');
+    assert.equal(caseFile.judgment.verdict, VERDICT.DELIBERATE);
+    assert.equal(caseFile.judgment.convergence, CONVERGENCE.OSCILLATION);
+  });
+
+  it('stops on round budget when unresolved', async () => {
+    const outputs = [
+      '{"position":"accept","reasoning":"r1","confidence":0.8,"artifacts":[]}',
+      '{"position":"reject","reasoning":"r1","confidence":0.6,"artifacts":[]}',
+      '{"position":"accept","reasoning":"r1","confidence":0.7,"artifacts":[]}',
+      '{"action":"revise","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"reject","critique":"ok","revision":""}',
+      '{"action":"hold","position_after":"accept","critique":"ok","revision":""}',
+    ];
+    const callModel = async () => outputs.shift();
+    const caseFile = await runDeliberationCase({ question: 'Proceed?', callModel, maxRounds: 2 });
+    assert.equal(caseFile.rounds.length, 2);
+    assert.equal(caseFile.termination.reason, 'budget_exhausted');
+    assert.equal(caseFile.judgment.convergence, CONVERGENCE.BUDGET_EXHAUSTED);
+  });
+
   it('degrades empty model output instead of crashing', async () => {
     const outputs = ['', '', '', '', '', ''];
     const callModel = async () => outputs.shift();

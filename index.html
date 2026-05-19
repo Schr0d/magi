@@ -94,7 +94,7 @@ NEXT_POLL:T-300
 </div>
 </div>
 <button class="remote-launch" id="remote-open" type="button" aria-haspopup="dialog" aria-controls="remote-panel">
-<span class="jp">質詢</span><span class="en">/ASK</span>
+<span class="jp">質詢</span><span class="en">/ASK+LOG</span>
 </button>
 </section>
 
@@ -104,6 +104,8 @@ NEXT_POLL:T-300
   <div><span class="jp" id="remote-title">質詢</span><span class="en">/INTERROGATE</span></div>
 <button class="remote-close" id="remote-close" type="button" aria-label="Close remote">×</button>
 </div>
+<div class="remote-grid">
+<div class="remote-left">
 <div class="remote-body">
 <textarea class="remote-input" id="remote-question" placeholder="MAGI SYSTEM へ質問を入力..." rows="3" maxlength="500"></textarea>
 <button class="remote-submit" id="remote-submit" type="button"><span class="jp">提訴</span><span class="en">SUBMIT</span></button>
@@ -141,6 +143,14 @@ NEXT_POLL:T-300
 <div class="remote-judgment" id="remote-judgment"></div>
 </div>
 <div class="remote-note">MAGI DELIBERATION SYSTEM // THREE NODE CONSENSUS</div>
+</div>
+<aside class="remote-trace" aria-label="MAGI decision trace">
+<div class="remote-result-head">裁定結果/VERDICT</div>
+<div class="remote-trace-verdict" id="remote-trace-verdict">NO CASE SEALED<br>PRESS ASK TO INTERROGATE MAGI</div>
+<div class="remote-result-head">裁定記録/JUDGMENT LOG</div>
+<div class="remote-trace-log" id="remote-trace-log">TRACE EMPTY // AWAITING CASE</div>
+</aside>
+</div>
 </div>
 </section>
 </main>

@@ -1,6 +1,6 @@
 # MAGI
 
-MAGI is a 1995 EVA/MAGI-style deliberation terminal. Three MAGI bio-computer nodes evaluate a question through the same OpenAI-compatible API, argue through a two-round protocol, and return a quorum judgment with a replayable case trace.
+MAGI is a 1995 EVA/MAGI-style deliberation terminal. Three MAGI bio-computer nodes evaluate a question through the same OpenAI-compatible API, re-evaluate each round against the other nodes' previous positions, and return a quorum judgment with a replayable case trace.
 
 The public demo has three modes:
 
@@ -13,7 +13,7 @@ The public demo has three modes:
 Run the static UI:
 
 ```powershell
-npx serve dist -p 3000 --no-clipboard
+npm start
 ```
 
 Open:
@@ -22,13 +22,13 @@ Open:
 http://localhost:3000
 ```
 
-Click `質詢/ASK` in the bottom-right console.
+Click `質詢/ASK+LOG` in the bottom-right console to open the interrogation panel, final verdict, and decision log.
 
 ## Play Modes
 
 ### REPLAY
 
-`REPLAY` is the default public demo path. It loads `test/fixtures/magi-case-sample.json`, runs a five-second MAGI deliberation animation, then shows the stored case result.
+`REPLAY` is the default public demo path. It loads `test/fixtures/magi-case-sample.json`, runs a five-second MAGI deliberation animation, then shows the stored case result and trace log.
 
 Use this when you want to see the ritual without an API key.
 
@@ -88,6 +88,20 @@ The three nodes are not generic assistant personas. They are three incompatible 
 - `CASPER-3`: Naoko as woman. Preserves private desire, attachment, humiliation, jealousy, and the man she cannot release.
 
 Each node returns structured JSON. MAGI preserves dissent and resolves the final case by quorum.
+
+## Convergence Protocol
+
+MAGI now runs a bounded multi-round convergence loop instead of stopping after one cross-review pass.
+
+- Round 1 asks each node for an independent `accept`, `reject`, or `deliberate` position.
+- Later rounds ask each node to review the previous round's peer brief and return `hold`, `revise`, or `no_go`.
+- `no_go` stops immediately.
+- Unanimous `accept` or `reject` stops immediately.
+- Two consecutive cross-review rounds where every node holds the same position stop as `stable_hold`.
+- Repeated position signatures that are not stable holds stop as `oscillation` and resolve to `deliberate`.
+- The hard default budget is four total rounds and twelve model calls.
+
+Completed cases include a `termination` block with the stop reason, final round, and model-call budget. The `ASK+LOG` panel shows the verdict above the full round-by-round decision log.
 
 ## Development
 
