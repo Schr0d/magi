@@ -1,8 +1,31 @@
 # MAGI
 
-MAGI is a 1995 EVA/MAGI-style deliberation terminal. Three MAGI bio-computer nodes evaluate a question through the same OpenAI-compatible API, re-evaluate each round against the other nodes' previous positions, and return a quorum judgment with a replayable case trace.
+MAGI is a 1995 EVA/MAGI-style multi-agent deliberation terminal. Three bio-computer nodes (MELCHIOR, BALTHASAR, CASPER) each run a distinct personality partition over an OpenAI-compatible API. They independently evaluate a question, cross-review each other's positions across multiple rounds, and resolve by quorum with a full replayable case trace.
 
-The public demo has three modes:
+## Architecture
+
+```
+index.html + style.css          Terminal UI (fixed 1365x768 stage, viewport-scaled)
+        |
+     app.js                     Client orchestrator: state, rendering, deliberation dispatch
+        |
+  +-----------+------------------+
+  |           |                  |
+REPLAY      BYO KEY            LOCAL
+  |           |                  |
+fixtures.js  model-client.js    deliberation-server.js
+             (browser fetch)    (Node.js proxy, port 3001)
+                    |                  |
+                    +--------+---------+
+                             |
+                     orchestrator.js     Multi-round convergence loop
+                             |
+                       protocol.js       Position/action parsing, judgment, convergence analysis
+                             |
+                       sound.js          Web Audio cue system (vote, accepted, rejected, error)
+```
+
+The three play modes:
 
 - `REPLAY`: static fixture replay. No key, no backend.
 - `BYO KEY`: browser-memory OpenAI-compatible mode. Bring a disposable low-limit API key.
@@ -91,17 +114,53 @@ Each node returns structured JSON. MAGI preserves dissent and resolves the final
 
 ## Convergence Protocol
 
-MAGI now runs a bounded multi-round convergence loop instead of stopping after one cross-review pass.
+MAGI runs a bounded multi-round convergence loop (max 4 rounds, 12 model calls):
 
-- Round 1 asks each node for an independent `accept`, `reject`, or `deliberate` position.
-- Later rounds ask each node to review the previous round's peer brief and return `hold`, `revise`, or `no_go`.
-- `no_go` stops immediately.
-- Unanimous `accept` or `reject` stops immediately.
-- Two consecutive cross-review rounds where every node holds the same position stop as `stable_hold`.
-- Repeated position signatures that are not stable holds stop as `oscillation` and resolve to `deliberate`.
-- The hard default budget is four total rounds and twelve model calls.
+1. **Round 1 (Independent):** Each node receives the question alone and returns `accept`, `reject`, or `deliberate` with reasoning and confidence.
+2. **Round 2+ (Cross-Review):** Each node reads the previous round's peer brief and returns `hold`, `revise`, or `no_go` with a critique.
 
-Completed cases include a `termination` block with the stop reason, final round, and model-call budget. The `ASK+LOG` panel shows the verdict above the full round-by-round decision log.
+### Termination conditions
+
+| Condition | Result |
+|-----------|--------|
+| Any node issues `no_go` | Immediate stop, verdict = `no_go` |
+| Unanimous `accept` or `reject` | Immediate stop, verdict = accepted/rejected |
+| Two consecutive cross-review rounds with identical positions and all `hold` | Stop as `stable_hold` |
+| Position signature repeats (oscillation) | Stop as `oscillation`, verdict forced to `deliberate` |
+| Round or model-call budget exhausted | Stop as `budget_exhausted` |
+
+### Judgments
+
+- **Unanimous:** All three nodes agree.
+- **Majority with dissent:** Two agree, one dissents. Dissent is preserved in the trace.
+- **Deadlock:** No majority. Verdict = `deliberate`.
+- **Partial:** Some nodes errored but a majority still reached quorum.
+- **Failed:** Too few usable responses.
+
+Each completed case includes a `termination` block with the stop reason, final round count, and model-call budget usage. The `ASK+LOG` panel shows the verdict above the full round-by-round decision log.
+
+## Sound System
+
+MAGI includes a Web Audio cue system (`src/deliberation/sound.js`) that plays distinct tones for different events:
+
+| Cue | Trigger |
+|-----|---------|
+| `access` | Panel open/close, mode switch |
+| `vote` | Deliberation in progress (repeating) |
+| `accepted` | Verdict = accepted |
+| `rejected` | Verdict = rejected or no_go |
+| `error` | Provider failure or model error |
+
+Sound is disabled by default. Click any interactive element to arm the audio context (browser autoplay policy). The `SOUND:ARMED` / `SOUND:SAFE` indicator in the status bar shows the current state.
+
+## Case Export / Import
+
+Completed deliberation cases can be exported as JSON and re-imported later:
+
+- **Export:** Click `搬出/EXPORT` in the ASK+LOG panel. Downloads the full case file including all rounds, messages, judgment, and termination metadata.
+- **Import:** Click `搬入/IMPORT` and select a previously exported case JSON. The terminal replays the case result and trace log without re-running the model.
+
+Case files follow the protocol defined in `src/deliberation/protocol.js` and can be validated with `validateCase()`.
 
 ## Development
 
@@ -110,6 +169,13 @@ Run tests:
 ```powershell
 npm test
 ```
+
+Test suite covers:
+- Deliberation protocol parsing (independent + cross-review messages)
+- Convergence analysis (all termination conditions)
+- Case validation and artifact building
+- Provider status polling and routing posture
+- Model client empty-response retry logic
 
 Poll provider status and refresh static output:
 
@@ -135,3 +201,8 @@ node --check src\deliberation\protocol.js
 - Do not use production API keys in browser BYO mode.
 - Some providers may block browser requests with CORS. Use `LOCAL` mode for those providers.
 - `BYO KEY` is for public experimentation, not production secret storage.
+- API keys are held in browser memory only. MAGI does not write them to `localStorage`, `sessionStorage`, or the repo.
+
+## Versioning
+
+See [CHANGELOG.md](CHANGELOG.md) for release history. Current version: `1.0.0`.

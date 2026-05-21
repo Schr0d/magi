@@ -105,7 +105,7 @@
 ## Implementation Rules
 - Read this file before any visual/UI change.
 - Preserve the 1995 TV EVA/MAGI direction unless the user explicitly changes the design system.
-- Use the existing preview as the visual source of truth: `C:\Users\T480\.gstack\projects\magi\designs\magi-nerv-terminal-20260508\preview-reference.html`.
+- Use the existing preview as the visual source of truth for the EVA/MAGI terminal direction.
 - Do not introduce modern SaaS defaults: rounded cards, neutral gray dashboards, large whitespace, soft shadows, marketing gradients, or friendly onboarding visuals.
 - If adding real data states, keep the same visual semantics: operational = aqua/green, degraded/caution = orange, outage/warning = red.
 
