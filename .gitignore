@@ -6,4 +6,5 @@ dist/
 /*.jpg
 /*.jpeg
 /*.png
+!magi-terminal.png
 /*.webp

@@ -2,6 +2,8 @@
 
 MAGI is a 1995 EVA/MAGI-style multi-agent deliberation terminal. Three bio-computer nodes (MELCHIOR, BALTHASAR, CASPER) each run a distinct personality partition over an OpenAI-compatible API. They independently evaluate a question, cross-review each other's positions across multiple rounds, and resolve by quorum with a full replayable case trace.
 
+![MAGI Terminal — STABLE_HOLD verdict: BALTHASAR reject, CASPER accept, MELCHIOR reject](magi-terminal.png)
+
 ## Architecture
 
 ```
@@ -206,3 +208,7 @@ node --check src\deliberation\protocol.js
 ## Versioning
 
 See [CHANGELOG.md](CHANGELOG.md) for release history. Current version: `1.0.0`.
+
+## Technical Documentation
+
+See [TECHNICAL.md](TECHNICAL.md) for protocol design, convergence algorithm, error handling, and architecture decisions.
